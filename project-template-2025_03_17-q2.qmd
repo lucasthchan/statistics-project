@@ -159,26 +159,74 @@ Right column
 :::
 :::
 
-## Introduction
+## Introduction: Aim
 
-## Data Cleaning
+::: {.callout-tip title="Overall Aim" style="font-size: 10pt"}
+The main goal of this project is to help Wellspring gain insight into how best to maximize the number of people who attend or are interested in attending Wellspring services.
+:::
+
+-   We will first discover whether the redesign changed the median age of members who engage in Wellspring services.
+
+-   We will then find if age is a significant factor in how often members engage in Wellspring services.
+
+-   Finally, we will look into whether online events encourage members to attend events more often.
+
+## Introduction: Data
+
+-   We will be using the `Member_Background.csv` file as our data.
+
+-   Our sample will be all the members whose data is listed in this `csv` file, which we will treat as representative of the population, which is all Wellspring members.
+
+-   The main audience of this analysis will be Wellspring, who we seek to provide insight to. However, this analysis may prove useful for all who are interested in how best to serve the needs of cancer patients and their family and friends.
+
+## Data Summary: Dataset
+
+-   The `Member_Background.csv` file has 4829 observations. This means the data of nearly 5000 Wellspring members is stored in this file!
+
+-   The file has a total of 68 variables; however, we will only be using the below,
+
+    -   `delivery_year`, `delivery_month`, `delivery_day`: These variables inform us of the date of each Wellspring service.
+
+    -   `age_years`: The age of each Wellspring member.
+
+    -   `number_of_present_service_deliveries`, `number_of_absent_service_deliveries`: The number of services that members are present or absent in.
+
+    -   `attendance_status`: Whether a member attended a service.
+
+    -   `service_session_location`: Whether a program was held online or in-person.
+
+## Data Summary: Methodology
+
+-   We will first perform data wrangling to only get the data we need, and filter out all datapoints where information may be missing.
+
+-   Afterwards, we will visualize our data.
+
+-   Finally, we will perform data analysis and interpret the results that we find.
+
+More details about data wrangling will be in each research question.
 
 ## Research Question 1
 
-## Research Question 2
+# [Research Question 2:]{.underline} **Is there an association between a member’s age and the number of services that they attended?**
 
-::: {style="font-size: 3em;"}
-Is there an association between a member’s age and the number of services that they attended?
-:::
+## RQ2: Variables and Methodology
 
-## Variables and Methodology
+**Variables**
 
 -   `age_years`: Age of a member
 -   `number_of_present_service_deliveries`: Total number of services in which the member was marked as "Present"
 
-I will attempt to use simple linear regression on the two variables, to find if an association exists between age and the number of services that a member attends. Finding this information allows Wellspring to discover if they should make changes to their services to cater to a more diverse age group. This linear regression will be *predictive* -- we are trying to see if a higher or lower age predicts lower attendance in service deliveries.
+**Methodology**
 
-## Data Wrangling
+-   I will use simple linear regression on the two variables.
+
+-   The aim is to find if an association exists between age and the number of services that a member attends
+
+-   Finding this information allows Wellspring to discover if they should make changes to their services to cater to a more diverse age group.
+
+-   This linear regression will be *predictive* -- we are trying to see if a higher or lower age predicts lower attendance in service deliveries.
+
+## RQ2: Data Wrangling
 
 ::: {.callout-tip title="Purpose" style="font-size: 10pt"}
 Before we perform the linear regression to find our results, we have to first clean up the raw data that we have.
@@ -192,7 +240,7 @@ dataset <- data_patient_members |> filter(! is.na(age_years) & ! is.na(number_of
 glimpse(dataset)
 ```
 
-## Visualization
+## RQ2: Visualization
 
 Before modelling, we will first visualize the data. Observe that
 
@@ -206,7 +254,7 @@ plot <- ggplot(dataset, aes(x=age_years, y=number_of_present_service_deliveries)
 plot
 ```
 
-## Modelling
+## RQ2: Modelling
 
 Now we can perform a linear model of our data using the `lm` function. Doing so tells us that the relationship between age (denoted $a$) and the number of services attended $S$ can be written as
 
@@ -216,7 +264,7 @@ $$
 
 Additionally, we have the $p$-values 0.00 and 0.02 and the $r^2$ value 0.002193643.
 
-## Interpretation
+## RQ2: Interpretation
 
 In our visualization, seemingly at age 60, there seems to be a small peak from the scatter plot; performing two linear regressions for members who are at most 60 and members who are not still gives us the equations
 
