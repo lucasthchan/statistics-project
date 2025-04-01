@@ -1,0 +1,422 @@
+---
+title: "Analyzing the Engagement of Wellspring Members"
+subtitle: "TUT0208-B"
+author: "Lucas Chan, Yuki Meng, JungWoo Song"
+format: beamer
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,      # Hide code
+  include = TRUE,   # Do not include output
+  warning = FALSE,   # Suppress warnings
+  message = FALSE,   # Suppress messages
+  results = TRUE   # Display printed output (can use results=FALSE for a specific code chunk to suppress output)
+)
+
+# Note: the options above are to hide the code chunk in the slides and to not include the code in the slides
+# There are many other options you can use to customize which parts of the code are run / displayed, 
+# as well as how the output is displayed. 
+# You can learn more at https://quarto.org/docs/computations/execution-options.html
+
+```
+
+```{r load-data, include=FALSE, results=FALSE}
+
+# setup
+library(tidyverse)
+
+# Load data we need to load the data, but don't want to display it in our slides
+# The code chunk options at in the curly brackets above specif
+data_patient_members <- read_csv("Member_Background.csv")
+data_attendance_records <- read_csv("Service_Deliveries.csv")
+
+
+## Parse members data
+## Types of cancer - convert to set of indicator variables for different types of cancer (don't include ones which are too rare)
+data_patient_members <- data_patient_members |>
+   mutate(lung = str_detect(types_of_cancer, "Lung"),
+         breast = str_detect(types_of_cancer, "Breast"),
+         brain = str_detect(types_of_cancer, "Brain"),
+         leukemia = str_detect(types_of_cancer, "Leukemia"),
+         prostate = str_detect(types_of_cancer, "Prostate"),
+         colorectal = str_detect(types_of_cancer, "Colorectal"),
+         pancreatic = str_detect(types_of_cancer, "Pancreatic"),
+         lymphoma_non_hodgkins = str_detect(types_of_cancer, "Lymphoma, Non-hodgkins"),
+         liver = str_detect(types_of_cancer, "Liver"),
+         multiple_myeloma = str_detect(types_of_cancer, "Multiple Myeloma"),
+         bladder = str_detect(types_of_cancer, "Bladder"),
+         cervical = str_detect(types_of_cancer, "Cervical"),
+         esophagus = str_detect(types_of_cancer, "Esophagus"),
+         gallbladder_and_bile_duct = str_detect(types_of_cancer, "Gallbladder and Bile Duct"),
+         head_and_neck = str_detect(types_of_cancer, "Head and Neck"),
+         kidney = str_detect(types_of_cancer, "Kidney"),
+         lymphoma_hodgkins = str_detect(types_of_cancer, "Lymphoma, Hodgkins"),
+         ovarian = str_detect(types_of_cancer, "Ovarian"),
+         skin = str_detect(types_of_cancer, "Skin"),
+         stomach = str_detect(types_of_cancer, "Stomach"),
+         testicular = str_detect(types_of_cancer, "Testicular"),
+         thyroid = str_detect(types_of_cancer, "Thyroid"),
+         cervical = str_detect(types_of_cancer, "Cervical"),
+         other = str_detect(types_of_cancer, "Other"))
+
+
+## Impairments - convert to set of indicator variables for different types of impairment (don't include ones which are too rare)
+data_patient_members <- data_patient_members |>
+  mutate(visual = str_detect(i_have_the_following_impairment, "visual"),
+         cognitive = str_detect(i_have_the_following_impairment, "cognitive"),
+         limited_mobility = str_detect(i_have_the_following_impairment, "mobility"),
+         none_of_the_above = str_detect(i_have_the_following_impairment, "None of the above"),
+         other = str_detect(i_have_the_following_impairment, "other"),
+         speech = str_detect(i_have_the_following_impairment, "speech"),
+         hearing = str_detect(i_have_the_following_impairment, "hearing")) 
+
+## Program interests: Split into boolean indicators for different categories
+data_patient_members <- data_patient_members |>
+  mutate(therapeutic_arts = str_detect(program_interest, "Therapeutic Arts"),
+         educational_and_self_developoment = str_detect(program_interest, "Educational & Self-Development"),
+         symptom_management = str_detect(program_interest, "Symptom Management"),
+         social_events = str_detect(program_interest, "Social / Events"),
+         financiaL_and_workplace_strategies = str_detect(program_interest, "Financial & Workplace Strategies"),
+         exercise_and_movement = str_detect(program_interest, "Exercise & Movement"),
+         individual_and_group_support = str_detect(program_interest, "Individual & Group Support")) |>
+  mutate(num_program_interests = therapeutic_arts + educational_and_self_developoment + symptom_management + social_events + financiaL_and_workplace_strategies + exercise_and_movement + individual_and_group_support)
+
+## How did you hear about wellspring: Split into booleans
+data_patient_members <- data_patient_members |>
+  mutate(word_of_mouth = str_detect(how_have_you_heard_of_wellspring, "Word of mouth"),
+         flyer = str_detect(how_have_you_heard_of_wellspring, "flyer"),
+         wellspring_member = str_detect(how_have_you_heard_of_wellspring, "Member"),
+         wellspring_member = str_detect(how_have_you_heard_of_wellspring, "Volunteer"),
+         doctor = str_detect(how_have_you_heard_of_wellspring, "Doctor"),
+         hospital = str_detect(how_have_you_heard_of_wellspring, "hospital"),
+         hospital = str_detect(how_have_you_heard_of_wellspring, "healthcare"),
+         tv = str_detect(how_have_you_heard_of_wellspring, "television"),
+         website = str_detect(how_have_you_heard_of_wellspring, "Website"),
+         family = str_detect(how_have_you_heard_of_wellspring, "Family"),
+         social_media = str_detect(how_have_you_heard_of_wellspring, "Social Media"),
+         other = str_detect(how_have_you_heard_of_wellspring, "Other"))
+
+```
+
+```{r create-new-variables, include=FALSE, results=FALSE}
+# dataset dimensions
+data_attendance_records |> 
+  dim()
+
+# What members register for the most events?
+data_attendance_records |> 
+  group_by(member_id) |>
+  summarise(n=n()) |>
+  arrange(desc(n))
+
+# Let's examine information on the member with the highest attendance
+high_attendance <- data_attendance_records |> 
+  filter(member_id == "003ON000007sHYtYAM")
+
+data_patient_members |> filter(member_id == "003ON000007sHYtYAM")
+
+# What is range of registration dates for members in first table
+data_patient_members |> 
+  group_by(member_start_year) |>
+  summarise(n=n()) |>
+  arrange(desc(n))
+```
+
+## Introduction: Aim
+
+::: {.callout-tip title="Overall Aim" style="font-size: 10pt"}
+The main goal of this project is to help Wellspring evaluate whether or not their current approaches are successful in sufficiently diversifying the age range of their members.
+:::
+
+1.  We will then find if age is a significant factor in how often members engage in Wellspring services.
+
+2.  We will first discover whether the redesign changed the median age of members who engage in Wellspring services.
+
+3.  Finally, we will look into whether online events encourage *older* members to attend events more often.
+
+## Introduction: Dataset
+
+-   Our sample will be all the members whose data is listed in our dataset, which we will treat as representative of the population, which is all Wellspring members.
+
+-   The main audience of this analysis will be Wellspring, who we seek to provide insight to. However, this analysis may prove useful for all who are interested in how best to serve the needs of cancer patients and their family and friends.
+
+## Data Summary
+
+-   The dataset which we will be using has 4829 observations.
+
+-   It has a total of 68 variables; however, we will only be using the below,
+
+    -   The year, month, and day of each Wellspring service delivery.
+
+    -   The age of each Wellspring member (in years).
+
+    -   The number of services that members are present in, and absent in.
+
+    -   Whether a member attended a service.
+
+    -   Whether a program was held online or in-person.
+
+## Methodology
+
+-   We will first perform data wrangling to get the data we need, and filter out all datapoints where information may be missing.
+
+-   Afterwards, we will visualize our data.
+
+-   We will then perform data analysis and interpret the results that we find.
+
+-   Finally, we will relate our interpretation back to the aim of the project.
+
+More details about data wrangling will be in each research question.
+
+## [Research Question 1:]{.underline} **Is there an association between a member’s age and the number of services that they attended?**
+
+## Variables and Methodology
+
+**Variables**
+
+-   The age of a member. (Denoted `age_years` in our dataset)
+-   Total number of services in which the member was marked as "Present". (Denoted `number_of_present_service_deliveries`)
+
+**Methodology**
+
+-   I will use simple linear regression on the two variables.
+
+-   The aim is to find if an association exists between age and the number of services that a member attends
+
+-   Finding this information allows Wellspring to discover if they should make changes to their services to cater to a more diverse age group.
+
+-   This linear regression will be *predictive* -- we are trying to see if a higher or lower age predicts lower attendance in service deliveries.
+
+## Data Wrangling
+
+Before we perform the linear regression to find our results, we have to first clean up the raw data that we have.
+
+To do this, we will first filter out
+
+-   All observations where either `age_years` or `number_of_present_service_deliveries` is undefined.
+
+<!-- -->
+
+-   Any observations where `age_years` $<0$.
+
+-   Observations where `age_years == 0`, as there are also an abnormally high number of these datapoints, suggesting that there may be an error in our dataset that causes an age of 0 to be recorded.
+
+```{r}
+dataset <- data_patient_members |> 
+  filter(! is.na(age_years) 
+         & ! is.na(number_of_present_service_deliveries) 
+         & age_years > 0) |> select(age_years, number_of_present_service_deliveries) 
+
+glimpse(dataset)
+```
+
+## Visualization
+
+Before modelling, we will first visualize the data. Observe that
+
+```{r}
+plot <- ggplot(dataset, aes(x=age_years, y=number_of_present_service_deliveries)) +  
+  geom_point(color="black") +     
+  geom_smooth(method="lm", se=FALSE) +    
+  labs(x="Age", y="Number of service deliveries attended") + 
+  theme_bw()  
+plot
+```
+
+## Modelling
+
+Now we can perform a linear model of our data using the `lm` function. Doing so gives us an equation of the relationship;
+
+$$ \# \text{ services attended}=0.02987\cdot\text{age}+55.70681 $$
+
+This is the equation of the line that we saw in the prior slide.
+
+-   Additionally, we have the $p$-value of $0.00131$ for the hypothesis that the slope of the relationship between the two variables is $0$.
+
+-   We also have an $R^2$ value of $0.00412$ between the two variables.
+
+## Interpretation
+
+-   With a small slope for the relationship between the number of services attended and age, we could argue that there is *no significant relationship* between the two variables.
+
+<!-- -->
+
+-   This is further evidenced by our small $p$-value, which suggests that there is strong evidence that the slope between the two variables for all Wellspring members is $0$, indicating that there is no significant association.
+
+-   The $R^2$ value, which measures how well the variation in service attended can be explained by variation in age, is also very small, suggesting that there is little association.
+
+One could argue that since there is a small peak at age 60 in the scatter plot, performing two regressions for members of age $\ge 60$ and age $<60$ would be more appropriate.
+
+-   However, doing so similarly gives small slope and $R^2$ values, suggesting there is also no significant association.
+
+## Research Question 2
+
+Is the median age of members attended at Wellspring before March 4^th^, 2024 similar to the median age of members attended at Wellspring after March 4^th^, 2024?
+
+## Motivation
+
+\- Understanding if the change to registration system affect age groups differently and helping Wellspring adapt their registration system
+
+\- Comparing median ages between two time could highlight whether the Wellspring’s current system are effectively impacting the joining of members across different backgrounds。
+
+-Using median instead of mean because avoiding outliers and a skewed distribution affect the results.
+
+## Method
+
+Two-sample hypothesis test to compare medians across two groups
+
+H₀: The median age of two groups(before and after March 4th, 2024) are same.
+
+Hₐ: The median age of two groups(before and after March 4th, 2024) are different.
+
+The H₀ is the assumption and we are finding and gathering the evidences to evaluate the assumption is True or False.
+
+## Visualization
+
+Boxplots of ages for two groups.
+
+Engagement period is based on the variables of delivery_year, delivery_month, delivery_day. Dividing it into two groups, which is before and after March 4th, 2024
+
+```{r, results=TRUE, echo=FALSE}
+library(tidyverse)
+data_patient_members <- read_csv("Member_Background.csv")
+data_attendance_records <- read_csv("Service_Deliveries.csv")
+
+df <- left_join(data_patient_members, data_attendance_records, by = "member_id")
+
+df$engagement_date <- as.Date(paste(df$delivery_year, df$delivery_month, df$delivery_day, sep = "-"))
+
+threshold_date <- as.Date("2024-03-04")
+
+df <- df %>%
+  mutate(engagement_period = ifelse(engagement_date < threshold_date, "Before March 4th, 2024", "After March 4th, 2024"))
+
+df <- df %>%
+  filter((age_years > 0) & !is.na(age_years) & !is.na(engagement_period))
+
+
+ggplot(df, aes(x = engagement_period, y = age_years, fill = engagement_period)) +
+  geom_boxplot() +
+  labs(title = "Comparison of Age Distribution Before and After March 4th, 2024",
+       x = "Engagement Period",
+       y = "Age of Member") +
+  theme_minimal() +
+  scale_fill_manual(values = c("lightblue", "lightcoral"))
+
+```
+
+## Results and Interpretation
+
+-   In our visualization, the median age between two groups is very similar, around 60 years old. The spreads of age between two groups are also very similar based on IQR is around 50 to 70 years old. Thus, the overall age distribution of the members did not significantly change showing that there is less influence of ages after the system update.
+
+-   However, the median of age after March 4^th^, 2024 is a little bit higher than before March 4^th^ showing that there are fewer younger age members who attended the Wellspring after the system update.
+
+-   The P-value is 0.9346 by using bootstrap, which is larger than 0.05. So it fails to reject the null hypothesis showing that the median age difference is not significant.
+
+# [Research Question 3:]{.underline} **Does the likelihood of missing events differ between in-person and online programs?**
+
+## Statement of the Question
+
+**Does the likelihood of missing events differ between in-person and online programs?** This question explores whether the format of a program (in-person vs. online) influences attendance rates. Answering this can help Wellspring understand engagement levels.
+
+------------------------------------------------------------------------
+
+## Relevant Visualization
+
+```{r}
+df <- left_join(data_patient_members, data_attendance_records, by = "member_id")
+
+df_clean <- df |> filter(!is.na(service_session_location), !is.na(attendance_status)) |> mutate(missed = attendance_status == "Unexcused Absence", event_format = ifelse(str_detect(service_session_location, "Online"), "Online", "In-Person"))
+
+missed_summary <- df_clean |> group_by(event_format) |>
+summarise(n_total = n(), n_missed = sum(missed),prop_missed = n_missed / n_total)
+
+missed_plot <- ggplot(missed_summary, aes(x = event_format, y = prop_missed, fill = event_format)) + geom_bar(stat = "identity") + labs(title = "Proportion of Missed Events: Online vs In-Person" , x = "Event Format", y = "Proportion Missed") + theme_minimal()
+
+missed_plot
+
+```
+
+## Set-up of Statistical Model/Method
+
+We use a two-sample hypothesis test for proportions.
+
+Let p1 = proportion of missed in-person events\
+Let p2 = proportion of missed online events
+
+H₀: p1 = p2\
+Hₐ: p1 ≠ p2
+
+We simulate the difference in missed proportions by randomly shuffling the event format labels.
+
+## Hypothesis Test
+
+```{r}
+obs_diff <- df_clean |> group_by(event_format) |> summarise(prop_missed = mean(missed)) |> summarise(diff = diff(prop_missed)) |> pull(diff)
+
+set.seed(130)
+nsim <- 1000
+simulated_diffs <- rep(NA, nsim)
+
+for (i in 1:nsim) {shuffled <- df_clean |> mutate(shuffled_loc = sample(event_format)) |>
+group_by(shuffled_loc) |> summarise(prop_missed = mean(missed)) |> summarise(diff = diff(prop_missed)) |> pull(diff)
+
+simulated_diffs[i] <- shuffled
+}
+
+null_dist <- ggplot(tibble(simulated_diffs), aes(x = simulated_diffs)) + geom_histogram(bins = 30, fill = "gray", color = "black") + geom_vline(xintercept = obs_diff, color = "red") + geom_vline(xintercept = -obs_diff, color = "red") + labs(title = "Simulated Null Distribution of Difference in Missed Proportions", x = "Difference (In-person - Online)", y = "Frequency"
+  )
+
+null_dist
+
+```
+
+## Results and Interpretation
+
+```{r}
+p_value <- (sum(abs(simulated_diffs) >= abs(obs_diff)) + 1) / (nsim + 1)
+p_value
+
+```
+
+The p-value is approximately 0.001, meaning that in only 0.1% of simulated random assignments did we observe a difference in missed proportions as extreme as the one in our data. This is strong evidence against the null hypothesis. Thus, I can conclude that the proportion of missed events is at the very least different between in-person and online formats. This suggests that event format does affect attendance behavior and may require different engagement strategies.
+
+## Limitations (I)
+
+Ambiguity as to how ‘engagement’ is defined 
+
+-   Does attending only one event mean an individual is ‘engaged’? 
+
+-   The issue is that engagement is not a one dimensional thing. That is, a person may attend a program/event but not actively participate 
+
+-   The data/Wellspring could include variables like qualitative feedback (how engaged a person believed they were) or repeat attendance count 
+
+Comparisons from before/after 
+
+-   The change in March 4, 2024, though dependent on the rollout of the new system, could still be affected by a multitude of different factors
+
+-   Seasonal effects, patient health, changes to programs, other external factors could be unaccounted for but still affect service attendance.
+
+## Limitations (II)
+
+Selection bias in the data
+
+-   The data that Wellspring provided only accounted for individuals who chose to register
+
+-   Thus, individuals who viewed the site or were interested in the programs but didn't register were not accounted for 
+
+-   This adds an extra layer of complication on figuring out whether or not the registration change was effective 
+
+-   Future data could include pre registration data if possible (web analytics or surveys?)
+
+## Conclusion
+
+-   After the system change, the number of young members decreased with a small proportion, but the overall impact of age on engagement in Wellspring remained minimal.
+
+-   There was no significant association between age and the number of services attended.
+
+-   Moreover, there are differences of the proportion of missed events between in-person and online formats, suggesting that event formats influences attendance behavior.
+
+-   So we can attract more younger members to join the Wellspring because the median age of members is around 60 years old which is relatively high. Also we can continue to provide suitable programs for old members to make sure they attend programs frequently, and pay attention to the event formats by offering more in-person programs.
