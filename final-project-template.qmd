@@ -221,11 +221,11 @@ ggplot(df, aes(x = engagement_period, y = age_years, fill = engagement_period)) 
 
 ## Results and Interpretation
 
-In our visualization, the median age between two groups is very similar, around 60 years old. The spreads of age between two groups are also very similar based on IQR is around 50 to 70 years old. Thus, the overall age distribution of the members did not significantly change showing that there is less influence of ages after the system update.
+- In our visualization, the median age between two groups is very similar, around 60 years old. The spreads of age between two groups are also very similar based on IQR is around 50 to 70 years old. Thus, the overall age distribution of the members did not significantly change showing that there is less influence of ages after the system update.
 
-However, the median of age after March 4^th^, 2024 is a little bit higher than before March 4^th^ showing that there are fewer younger age members who attended the Wellspring after the system update.
+- However, the median of age after March 4^th^, 2024 is a little bit higher than before March 4^th^ showing that there are fewer younger age members who attended the Wellspring after the system update.
 
-The P-value is 0.9346 by using bootstrap, which is larger than 0.05. So it fails to reject the null hypothesis showing that the median age difference is not significant.
+- The P-value is 0.9346 by using bootstrap, which is larger than 0.05. So it fails to reject the null hypothesis showing that the median age difference is not significant.
 
 # Conclusion
 
